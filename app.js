@@ -6,7 +6,7 @@
     var h=hooks[Math.floor(Math.random()*hooks.length)];
     var topic=document.getElementById('topic').value||'우리 앱';
     var body=h+'\\n\\n'+topic+' — 설치 없이 바로.\\n링크는 고정댓글.';
-    document.getElementById('out').textContent=body;
+    document.getElementById('out').textContent=body; try{localStorage.setItem('lastHook',body);}catch(e){}
     try{legionTrack('activate',{})}catch(e){}
   }
   root.innerHTML='<div class="card"><div class="sub">템플릿 '+hooks.length+'개</div><input id="topic" placeholder="주제/제품"/><button id="go">훅 생성</button><button class="sec" id="copy">복사</button><pre id="out" style="margin-top:12px;white-space:pre-wrap;font-size:13px"></pre></div>';
