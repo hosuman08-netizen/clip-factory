@@ -31,9 +31,12 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
     var st=JSON.parse(localStorage.getItem('clip_streak')||'{}');
     var sc=st.count||0;
     var last=localStorage.getItem('lastHook')||'';
-    root.innerHTML='<div class="card"><div class="sub">템플릿 '+hooks.length+'개 · 생성 '+gens+' · 오늘 '+todayN()+' · 복사 '+copyn+' · 🔥'+sc+'일 · 핀 '+pins.length+'</div>'
+    var fomo=function(){var e=new Date();e.setHours(24,0,0,0);var ms=Math.max(0,e-Date.now());return Math.floor(ms/3600000)+'h '+Math.floor((ms%3600000)/60000)+'m';}();
+    var presets=['사주 미니앱','Mac 월페이퍼','에코특공대','타로 1장','Budget Pulse'];
+    root.innerHTML='<div class="card"><div class="sub">템플릿 '+hooks.length+'개 · 생성 '+gens+' · 오늘 '+todayN()+' · 복사 '+copyn+' · 🔥'+sc+'일 · 핀 '+pins.length+' · 창 '+fomo+'</div>'
+      +'<div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">'+presets.map(function(p){return '<button class="sec" data-pre="'+p+'" style="padding:6px 8px;font-size:12px">'+p+'</button>';}).join('')+'</div>'
       +'<input id="topic" placeholder="주제/제품" value="'+(localStorage.getItem('clip_topic')||'').replace(/"/g,'&quot;')+'"/>'
-      +'<button id="go">훅 생성</button><button class="sec" id="copy">복사</button>'
+      +'<button id="go">훅 생성</button><button class="sec" id="x3">3연 훅</button><button class="sec" id="copy">복사</button>'
       +'<button class="sec" id="again">변형 재생성</button><button class="sec" id="pin">📌 핀</button>'
       +'<pre id="out" style="margin-top:12px;white-space:pre-wrap;font-size:13px">'+last.replace(/</g,'&lt;')+'</pre></div>'
       +(pins.length?'<div class="card"><b>핀 훅</b><div id="pins" class="sub" style="margin-top:8px"></div></div>':'')
@@ -83,6 +86,29 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
     }
     document.getElementById('go').onclick=function(){gen(false);};
     document.getElementById('again').onclick=function(){gen(true);};
+    var x3=document.getElementById('x3');
+    if(x3) x3.onclick=function(){
+      var topicEl=document.getElementById('topic');
+      var topic=(topicEl&&topicEl.value)||'우리 앱';
+      try{localStorage.setItem('clip_topic',topic);}catch(e){}
+      var batch=[];
+      for(var n=0;n<3;n++){
+        var h0=hooks[Math.floor(Math.random()*hooks.length)];
+        var body=h0+'\n\n'+topic+' — 설치 없이 바로.\n링크는 고정댓글.';
+        batch.push(body); hist.unshift(body); gens++; bumpToday();
+      }
+      localStorage.setItem('clip_gens',gens); saveHist();
+      try{localStorage.setItem('lastHook',batch.join('\n---\n'));}catch(e){}
+      bumpStreak(); render();
+      document.getElementById('out').textContent=batch.join('\n---\n');
+      try{legionTrack('activate',{batch:3})}catch(e){}
+    };
+    Array.prototype.forEach.call(document.querySelectorAll('[data-pre]'),function(b){
+      b.onclick=function(){
+        document.getElementById('topic').value=b.getAttribute('data-pre');
+        try{localStorage.setItem('clip_topic',b.getAttribute('data-pre'));}catch(e){}
+      };
+    });
     document.getElementById('pin').onclick=function(){
       var o=document.getElementById('out');
       var body=(o&&o.textContent)||localStorage.getItem('lastHook')||'';
