@@ -9,7 +9,7 @@
     document.getElementById('out').textContent=body;
     try{legionTrack('activate',{})}catch(e){}
   }
-  root.innerHTML='<div class="card"><input id="topic" placeholder="주제/제품"/><button id="go">훅 생성</button><button class="sec" id="copy">복사</button><pre id="out" style="margin-top:12px;white-space:pre-wrap;font-size:13px"></pre></div>';
+  root.innerHTML='<div class="card"><div class="sub">템플릿 '+hooks.length+'개</div><input id="topic" placeholder="주제/제품"/><button id="go">훅 생성</button><button class="sec" id="copy">복사</button><pre id="out" style="margin-top:12px;white-space:pre-wrap;font-size:13px"></pre></div>';
   document.getElementById('go').onclick=gen;
   document.getElementById('copy').onclick=function(){var t=document.getElementById('out').textContent;if(navigator.clipboard)navigator.clipboard.writeText(t);try{legionTrack('share_peak',{})}catch(e){}};
   try{legionTrack('session_start',{})}catch(e){}
