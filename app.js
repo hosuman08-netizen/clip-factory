@@ -3,11 +3,14 @@
   var gens=+(localStorage.getItem('clip_gens')||0);
   var copyn=+(localStorage.getItem('clip_copy')||0);
   var hist=(function(){try{return JSON.parse(localStorage.getItem('clip_hist')||'[]');}catch(e){return[];}})();
+  var pins=(function(){try{return JSON.parse(localStorage.getItem('clip_pins')||'[]');}catch(e){return[];}})();
   var root=document.getElementById('app');
   function dayKey(off){
     var d=new Date(); d.setDate(d.getDate()+(off||0));
     return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
   }
+  function todayN(){try{return +(localStorage.getItem('clip_day_'+dayKey(0))||0);}catch(e){return 0;}}
+  function bumpToday(){try{localStorage.setItem('clip_day_'+dayKey(0),String(todayN()+1));}catch(e){}}
   function bumpStreak(){
     try{
       var st=JSON.parse(localStorage.getItem('clip_streak')||'{}');
@@ -20,14 +23,17 @@
     }catch(e){return {count:0};}
   }
   function saveHist(){try{localStorage.setItem('clip_hist',JSON.stringify(hist.slice(0,12)));}catch(e){}}
+  function savePins(){try{localStorage.setItem('clip_pins',JSON.stringify(pins.slice(0,8)));}catch(e){}}
   function render(){
     var st=JSON.parse(localStorage.getItem('clip_streak')||'{}');
     var sc=st.count||0;
-    root.innerHTML='<div class="card"><div class="sub">템플릿 '+hooks.length+'개 · 생성 '+gens+'회 · 복사 '+copyn+'회 · 🔥'+sc+'일</div>'
+    var last=localStorage.getItem('lastHook')||'';
+    root.innerHTML='<div class="card"><div class="sub">템플릿 '+hooks.length+'개 · 생성 '+gens+'회 · 복사 '+copyn+'회 · 오늘 '+todayN()+' · 🔥'+sc+'일 · 핀 '+pins.length+'</div>'
       +'<input id="topic" placeholder="주제/제품" value="'+(localStorage.getItem('clip_topic')||'').replace(/"/g,'&quot;')+'"/>'
       +'<button id="go">훅 생성</button><button class="sec" id="copy">복사</button>'
-      +'<button class="sec" id="again">변형 재생성</button>'
-      +'<pre id="out" style="margin-top:12px;white-space:pre-wrap;font-size:13px">'+(localStorage.getItem('lastHook')||'')+'</pre></div>'
+      +'<button class="sec" id="again">변형 재생성</button><button class="sec" id="pin">📌 핀</button>'
+      +'<pre id="out" style="margin-top:12px;white-space:pre-wrap;font-size:13px">'+last.replace(/</g,'&lt;')+'</pre></div>'
+      +(pins.length?'<div class="card"><b>핀 훅</b><div id="pins" class="sub" style="margin-top:8px"></div></div>':'')
       +'<div class="card"><b>최근 훅</b><div id="hist" class="sub" style="margin-top:8px"></div></div>';
     var h=document.getElementById('hist');
     if(h) h.innerHTML=hist.length?hist.map(function(x,i){
@@ -40,28 +46,48 @@
         try{localStorage.setItem('lastHook',hist[i]||'');}catch(e){}
       };
     });
+    var pb=document.getElementById('pins');
+    if(pb){
+      pb.innerHTML=pins.map(function(x,i){
+        return '<div data-p="'+i+'" style="padding:6px 0;border-bottom:1px solid #2a2438;cursor:pointer">📌 '+String(x).slice(0,70).replace(/</g,'&lt;')+'</div>';
+      }).join('');
+      Array.prototype.forEach.call(document.querySelectorAll('[data-p]'),function(el){
+        el.onclick=function(){
+          var i=+el.getAttribute('data-p');
+          document.getElementById('out').textContent=pins[i]||'';
+          try{localStorage.setItem('lastHook',pins[i]||'');}catch(e){}
+        };
+      });
+    }
     function gen(forceDiff){
       var topicEl=document.getElementById('topic');
       var topic=(topicEl&&topicEl.value)||'우리 앱';
       try{localStorage.setItem('clip_topic',topic);}catch(e){}
-      var last=localStorage.getItem('lastHook')||'';
+      var lastH=localStorage.getItem('lastHook')||'';
       var h0, tries=0;
       do{
         h0=hooks[Math.floor(Math.random()*hooks.length)];
         tries++;
-      }while(forceDiff && last.indexOf(h0)===0 && tries<8);
+      }while(forceDiff && lastH.indexOf(h0)===0 && tries<8);
       var body=h0+'\n\n'+topic+' — 설치 없이 바로.\n링크는 고정댓글.';
       gens++; localStorage.setItem('clip_gens',gens);
       hist.unshift(body); saveHist();
-      document.getElementById('out').textContent=body;
       try{localStorage.setItem('lastHook',body);}catch(e){}
-      bumpStreak();
+      bumpToday(); bumpStreak();
       try{legionTrack('activate',{diff:!!forceDiff})}catch(e){}
       render();
       document.getElementById('out').textContent=body;
     }
     document.getElementById('go').onclick=function(){gen(false);};
     document.getElementById('again').onclick=function(){gen(true);};
+    document.getElementById('pin').onclick=function(){
+      var o=document.getElementById('out');
+      var body=(o&&o.textContent)||localStorage.getItem('lastHook')||'';
+      if(!body)return;
+      if(pins.indexOf(body)<0){ pins.unshift(body); savePins(); }
+      render(); document.getElementById('out').textContent=body;
+      try{legionTrack('pin',{})}catch(e){}
+    };
     document.getElementById('copy').onclick=function(){
       var o=document.getElementById('out');
       if(!o||!o.textContent)return;
