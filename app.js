@@ -1,3 +1,6 @@
+
+/* LEGION_WAVE_25_session_counter */
+try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorage.setItem('lw_p31_clip_fac_session_counter','1');localStorage.setItem('lw_p31_clip_fac_session_counter',String((+(localStorage.getItem('lw_p31_clip_fac_session_counter')||0))+1));}}catch(e){}
 (function(){
   var hooks=['이 실수 하고 있지 않나요?','3초만 보세요.','오늘부터 바뀌는 것.','아무도 안 알려준 팁.','결과는 충격적이었습니다.','설치 없이 바로.','친구 태그하고 봐.','저장 각.','오늘만 이 창.','이거 모르고 있었지?','홈에 추가하면 더 편해','한 판만 해봐','공유하면 리필','정진 한 치 더','잘이 기본','맥 배경 30초 컷','가자가자','정진 루프','무료인데 왜?','썸네일 클릭 유발','스크롤 멈추게','반박 불가 훅','오늘 밤만','분야 1위 노림','ㄱㄱ 모드'];
   var gens=+(localStorage.getItem('clip_gens')||0);
