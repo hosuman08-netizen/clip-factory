@@ -28,7 +28,7 @@
     var st=JSON.parse(localStorage.getItem('clip_streak')||'{}');
     var sc=st.count||0;
     var last=localStorage.getItem('lastHook')||'';
-    root.innerHTML='<div class="card"><div class="sub">템플릿 '+hooks.length+'개 · 생성 '+gens+'회 · 복사 '+copyn+'회 · 오늘 '+todayN()+' · 🔥'+sc+'일 · 핀 '+pins.length+'</div>'
+    root.innerHTML='<div class="card"><div class="sub">템플릿 '+hooks.length+'개 · 생성 '+gens+' · 오늘 '+todayN()+' · 복사 '+copyn+' · 🔥'+sc+'일 · 핀 '+pins.length+'</div>'
       +'<input id="topic" placeholder="주제/제품" value="'+(localStorage.getItem('clip_topic')||'').replace(/"/g,'&quot;')+'"/>'
       +'<button id="go">훅 생성</button><button class="sec" id="copy">복사</button>'
       +'<button class="sec" id="again">변형 재생성</button><button class="sec" id="pin">📌 핀</button>'
