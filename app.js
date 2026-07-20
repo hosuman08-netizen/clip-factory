@@ -112,3 +112,5 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
     try{legionTrack('money_pipe_shown',{app:'auto'})}catch(e){}
   }catch(e){}})();
 })();
+
+/* LEGION_WAVE_70_wave_stamp */ /* ship wave 70 2026-07-21T07:43:42 */
