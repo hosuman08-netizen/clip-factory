@@ -28,6 +28,16 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
   function saveHist(){try{localStorage.setItem('clip_hist',JSON.stringify(hist.slice(0,12)));}catch(e){}}
   function savePins(){try{localStorage.setItem('clip_pins',JSON.stringify(pins.slice(0,8)));}catch(e){}}
   function render(){
+    setTimeout(function(){
+      try{
+        var el=document.getElementById('clipSpark'); if(!el)return;
+        var vals=[],max=1;
+        for(var i=6;i>=0;i--){
+          var n=+(localStorage.getItem('clip_day_'+dayKey(-i))||0); vals.push(n); if(n>max)max=n;
+        }
+        el.innerHTML=vals.map(function(n){var h=Math.max(3,Math.round(n/max*24));return '<div style="flex:1;height:'+h+'px;background:'+(n>0?'#e0b552':'#2a2438')+';border-radius:2px"></div>';}).join('');
+      }catch(e){}
+    },0);
     var st=JSON.parse(localStorage.getItem('clip_streak')||'{}');
     var sc=st.count||0;
     var last=localStorage.getItem('lastHook')||'';
@@ -40,7 +50,7 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
       +'<button class="sec" id="again">변형 재생성</button><button class="sec" id="pin">📌 핀</button>'
       +'<pre id="out" style="margin-top:12px;white-space:pre-wrap;font-size:13px">'+last.replace(/</g,'&lt;')+'</pre></div>'
       +(pins.length?'<div class="card"><b>핀 훅</b><div id="pins" class="sub" style="margin-top:8px"></div></div>':'')
-      +'<div class="card"><b>최근 훅</b><div id="hist" class="sub" style="margin-top:8px"></div></div>';
+      +'<div class="card"><b>7일 생성</b><div id="clipSpark" style="display:flex;align-items:flex-end;gap:3px;height:28px;margin-top:8px"></div></div>'+'<div class="card"><b>최근 훅</b><div id="hist" class="sub" style="margin-top:8px"></div></div>';
     var h=document.getElementById('hist');
     if(h) h.innerHTML=hist.length?hist.map(function(x,i){
       return '<div data-h="'+i+'" style="padding:6px 0;border-bottom:1px solid #2a2438;cursor:pointer">'+String(x).slice(0,80).replace(/</g,'&lt;')+(String(x).length>80?'…':'')+'</div>';
