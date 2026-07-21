@@ -40,6 +40,7 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
     },0);
     var st=JSON.parse(localStorage.getItem('clip_streak')||'{}');
     var sc=st.count||0;
+    var tn=todayN();
     var last=localStorage.getItem('lastHook')||'';
     var fomo=function(){var e=new Date();e.setHours(24,0,0,0);var ms=Math.max(0,e-Date.now());return Math.floor(ms/3600000)+'h '+Math.floor((ms%3600000)/60000)+'m';}();
     var tn=todayN(), ydn=+(localStorage.getItem('clip_day_'+dayKey(-1))||0);
@@ -47,7 +48,7 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
     var weekSum=0; for(var wi=0;wi<7;wi++) weekSum+=+(localStorage.getItem('clip_day_'+dayKey(-wi))||0);
     var wAvg=Math.round(weekSum/7*10)/10;
     var presets=['사주 미니앱','Mac 월페이퍼','에코특공대','타로 1장','Budget Pulse'];
-    root.innerHTML='<div class="card"><div class="sub">템플릿 '+hooks.length+'개 · 생성 '+gens+' · 오늘 '+tn+'/'+goal+' · 전일 '+(tn-ydn>=0?'+':'')+(tn-ydn)+' · 7일평균 '+wAvg+' · 복사 '+copyn+' · 🔥'+sc+'일 · 핀 '+pins.length+' · 창 '+fomo+'</div>'
+    root.innerHTML='<div class="card"><div class="sub">템플릿 '+hooks.length+'개 · 생성 '+gens+' · 오늘 '+tn+'/'+goal+' · 전일 '+(tn-ydn>=0?'+':'')+(tn-ydn)+' · 7일평균 '+wAvg+' · 복사 '+copyn+' · 🔥'+sc+'일 · 목표 '+Math.min(5,todayN())+'/5 · 핀 '+pins.length+' · 창 '+fomo+'</div>'
       +'<div style="height:6px;background:#1c1826;border-radius:4px;margin:8px 0;overflow:hidden"><i style="display:block;height:100%;width:'+gPct+'%;background:linear-gradient(90deg,#e0b552,#f472b6)"></i></div>'
       +'<div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">'+presets.map(function(p){return '<button class="sec" data-pre="'+p+'" style="padding:6px 8px;font-size:12px">'+p+'</button>';}).join('')+'</div>'
       +'<input id="topic" placeholder="주제/제품" value="'+(localStorage.getItem('clip_topic')||'').replace(/"/g,'&quot;')+'"/>'
