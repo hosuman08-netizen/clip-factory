@@ -104,6 +104,7 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
     var wAvg=Math.round(weekSum/7*10)/10;
     var presets=['사주 미니앱','Mac 월페이퍼','에코특공대','타로 1장','Budget Pulse'];
     root.innerHTML='<div class="card"><div class="sub">템플릿 '+hooks.length+'개 · 생성 '+gens+' · 오늘 '+tn+'/'+goal+' · 전일 '+(tn-ydn>=0?'+':'')+(tn-ydn)+' · 7일평균 '+wAvg+' · 복사 '+copyn+' · 🔥'+sc+'일 · 목표 '+Math.min(5,todayN())+'/5 · 핀 '+pins.length+' · 창 '+fomo+'</div>'
+      +'<div class="sub" id="persistChip">재로드 유지 · 핀 '+pins.length+'/8 · 히스토리 '+hist.length+'/12 · lastHook '+(last?'복원':'없음')+'</div>'
       +'<div style="height:6px;background:#1c1826;border-radius:4px;margin:8px 0;overflow:hidden"><i style="display:block;height:100%;width:'+gPct+'%;background:linear-gradient(90deg,#e0b552,#f472b6)"></i></div>'
       +'<div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">'+presets.map(function(p){return '<button class="sec" data-pre="'+p+'" style="padding:6px 8px;font-size:12px">'+p+'</button>';}).join('')+'</div>'
       +'<div class="sub" style="margin:0 0 6px">훅 분류 · 선택한 풀에서만 뽑음 · 영상 렌더 없음</div>'
@@ -145,7 +146,7 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
     var h=document.getElementById('hist');
     if(h) h.innerHTML=hist.length?hist.map(function(x,i){
       return '<div data-h="'+i+'" style="padding:6px 0;border-bottom:1px solid #2a2438;cursor:pointer">'+String(x).slice(0,80).replace(/</g,'&lt;')+(String(x).length>80?'…':'')+'</div>';
-    }).join(''):'생성하면 여기 쌓임 · 탭=재로드';
+    }).join(''):'생성하면 여기 쌓임 · 재로드해도 유지';
     Array.prototype.forEach.call(document.querySelectorAll('[data-h]'),function(el){
       el.onclick=function(){
         var i=+el.getAttribute('data-h');
@@ -156,13 +157,23 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
     var pb=document.getElementById('pins');
     if(pb){
       pb.innerHTML=pins.map(function(x,i){
-        return '<div data-p="'+i+'" style="padding:6px 0;border-bottom:1px solid #2a2438;cursor:pointer">📌 '+String(x).slice(0,70).replace(/</g,'&lt;')+'</div>';
+        return '<div style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid #2a2438">'
+          +'<div data-p="'+i+'" style="flex:1;cursor:pointer">📌 '+String(x).slice(0,70).replace(/</g,'&lt;')+'</div>'
+          +'<button type="button" class="sec" data-unpin="'+i+'" style="padding:4px 8px;font-size:11px">해제</button>'
+          +'</div>';
       }).join('');
       Array.prototype.forEach.call(document.querySelectorAll('[data-p]'),function(el){
         el.onclick=function(){
           var i=+el.getAttribute('data-p');
           document.getElementById('out').textContent=pins[i]||'';
           try{localStorage.setItem('lastHook',pins[i]||'');}catch(e){}
+        };
+      });
+      Array.prototype.forEach.call(document.querySelectorAll('[data-unpin]'),function(el){
+        el.onclick=function(ev){
+          if(ev) ev.stopPropagation();
+          var i=+el.getAttribute('data-unpin');
+          if(i>=0 && i<pins.length){ pins.splice(i,1); savePins(); render(); }
         };
       });
     }
@@ -252,9 +263,12 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
       var o=document.getElementById('out');
       var body=(o&&o.textContent)||localStorage.getItem('lastHook')||'';
       if(!body)return;
-      if(pins.indexOf(body)<0){ pins.unshift(body); savePins(); }
+      var ix=pins.indexOf(body);
+      if(ix>=0){ pins.splice(ix,1); }
+      else { pins.unshift(body); if(pins.length>8) pins=pins.slice(0,8); }
+      savePins();
       render(); document.getElementById('out').textContent=body;
-      try{legionTrack('pin',{})}catch(e){}
+      try{legionTrack('pin',{on:ix<0?1:0})}catch(e){}
     };
     var uc=document.getElementById('undoClip');
     if(uc) uc.onclick=function(){
