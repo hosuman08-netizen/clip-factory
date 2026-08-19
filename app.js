@@ -2,7 +2,19 @@
 /* LEGION_WAVE_25_session_counter */
 try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorage.setItem('lw_p31_clip_fac_session_counter','1');localStorage.setItem('lw_p31_clip_fac_session_counter',String((+(localStorage.getItem('lw_p31_clip_fac_session_counter')||0))+1));}}catch(e){}
 (function(){
-  var hooks=['이 실수 하고 있지 않나요?','3초만 보세요.','오늘부터 바뀌는 것.','아무도 안 알려준 팁.','결과는 충격적이었습니다.','설치 없이 바로.','친구 태그하고 봐.','저장 각.','오늘만 이 창.','이거 모르고 있었지?','홈에 추가하면 더 편해','한 판만 해봐','공유하면 리필','정진 한 치 더','잘이 기본','맥 배경 30초 컷','가자가자','정진 루프','무료인데 왜?','썸네일 클릭 유발','스크롤 멈추게','반박 불가 훅','오늘 밤만','분야 1위 노림','ㄱㄱ 모드'];
+  var HOOK_KINDS=[
+    {id:'q',l:'질문',pool:['이 실수 하고 있지 않나요?','이거 모르고 있었지?','무료인데 왜?','저장 안 하면 후회?','3초 넘겼어?']},
+    {id:'r',l:'반박',pool:['아무도 안 알려준 팁.','결과는 충격적이었습니다.','반박 불가 훅','그 방법, 틀렸어.','잘이 기본']},
+    {id:'f',l:'FOMO',pool:['오늘만 이 창.','오늘 밤만','오늘부터 바뀌는 것.','창 닫히기 전.','지금 아니면 내일 없음.']},
+    {id:'n',l:'숫자',pool:['3초만 보세요.','맥 배경 30초 컷','분야 1위 노림','7일 만에 루프.','정진 한 치 더']},
+    {id:'c',l:'명령',pool:['친구 태그하고 봐.','저장 각.','한 판만 해봐','가자가자','ㄱㄱ 모드']}
+  ];
+  function hookKind(){
+    var id; try{id=localStorage.getItem('clip_hk')||'q';}catch(e){id='q';}
+    return HOOK_KINDS.filter(function(x){return x.id===id;})[0]||HOOK_KINDS[0];
+  }
+  function hookPool(){return hookKind().pool;}
+  var hooks=HOOK_KINDS.reduce(function(a,k){return a.concat(k.pool);},[]);
   var gens=+(localStorage.getItem('clip_gens')||0);
   var copyn=+(localStorage.getItem('clip_copy')||0);
   var hist=(function(){try{return JSON.parse(localStorage.getItem('clip_hist')||'[]');}catch(e){return[];}})();
@@ -51,6 +63,11 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
     root.innerHTML='<div class="card"><div class="sub">템플릿 '+hooks.length+'개 · 생성 '+gens+' · 오늘 '+tn+'/'+goal+' · 전일 '+(tn-ydn>=0?'+':'')+(tn-ydn)+' · 7일평균 '+wAvg+' · 복사 '+copyn+' · 🔥'+sc+'일 · 목표 '+Math.min(5,todayN())+'/5 · 핀 '+pins.length+' · 창 '+fomo+'</div>'
       +'<div style="height:6px;background:#1c1826;border-radius:4px;margin:8px 0;overflow:hidden"><i style="display:block;height:100%;width:'+gPct+'%;background:linear-gradient(90deg,#e0b552,#f472b6)"></i></div>'
       +'<div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">'+presets.map(function(p){return '<button class="sec" data-pre="'+p+'" style="padding:6px 8px;font-size:12px">'+p+'</button>';}).join('')+'</div>'
+      +'<div class="sub" style="margin:0 0 6px">훅 분류 · 선택한 풀에서만 뽑음 · 영상 렌더 없음</div>'
+      +'<div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">'+HOOK_KINDS.map(function(k){
+        var on=hookKind().id===k.id;
+        return '<button type="button" data-hk="'+k.id+'" style="padding:6px 12px;font-size:12px;border-radius:999px;cursor:pointer;border:1px solid '+(on?'#e0b552':'#2a2438')+';background:'+(on?'#e0b552':'#1c1826')+';color:'+(on?'#111':'#ece8f1')+'">'+k.l+'</button>';
+      }).join('')+'</div>'
       +'<input id="topic" placeholder="주제/제품" value="'+(localStorage.getItem('clip_topic')||'').replace(/"/g,'&quot;')+'"/>'
       +'<button id="go">훅 생성</button><button class="sec" id="x3">3연 훅</button><button class="sec" id="copy">복사</button>'
       +'<button class="sec" id="again">변형 재생성</button><button class="sec" id="pin">📌 핀</button><button class="sec" id="undoClip">↩ 직전</button>'
@@ -86,12 +103,14 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
       var topic=(topicEl&&topicEl.value)||'우리 앱';
       try{localStorage.setItem('clip_topic',topic);}catch(e){}
       var lastH=localStorage.getItem('lastHook')||'';
+      var kind=hookKind();
+      var pool=kind.pool;
       var h0, tries=0;
       do{
-        h0=hooks[Math.floor(Math.random()*hooks.length)];
+        h0=pool[Math.floor(Math.random()*pool.length)];
         tries++;
-      }while(forceDiff && lastH.indexOf(h0)===0 && tries<8);
-      var body=h0+'\n\n'+topic+' — 설치 없이 바로.\n링크는 고정댓글.';
+      }while(forceDiff && lastH.indexOf(h0)>=0 && tries<8);
+      var body='['+kind.l+'] '+h0+'\n\n'+topic+' — 설치 없이 바로.\n링크는 고정댓글.';
       gens++; localStorage.setItem('clip_gens',gens);
       hist.unshift(body); saveHist();
       try{localStorage.setItem('lastHook',body);}catch(e){}
@@ -108,9 +127,11 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
       var topic=(topicEl&&topicEl.value)||'우리 앱';
       try{localStorage.setItem('clip_topic',topic);}catch(e){}
       var batch=[];
+      var kind=hookKind();
+      var pool=kind.pool;
       for(var n=0;n<3;n++){
-        var h0=hooks[Math.floor(Math.random()*hooks.length)];
-        var body=h0+'\n\n'+topic+' — 설치 없이 바로.\n링크는 고정댓글.';
+        var h0=pool[Math.floor(Math.random()*pool.length)];
+        var body='['+kind.l+'] '+h0+'\n\n'+topic+' — 설치 없이 바로.\n링크는 고정댓글.';
         batch.push(body); hist.unshift(body); gens++; bumpToday();
       }
       localStorage.setItem('clip_gens',gens); saveHist();
@@ -123,6 +144,14 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
       b.onclick=function(){
         document.getElementById('topic').value=b.getAttribute('data-pre');
         try{localStorage.setItem('clip_topic',b.getAttribute('data-pre'));}catch(e){}
+      };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-hk]'),function(b){
+      b.onclick=function(){
+        try{localStorage.setItem('clip_hk',b.getAttribute('data-hk'));}catch(e){}
+        var keep=(document.getElementById('out')&&document.getElementById('out').textContent)||'';
+        render();
+        if(keep){var o=document.getElementById('out'); if(o) o.textContent=keep;}
       };
     });
     document.getElementById('pin').onclick=function(){
