@@ -31,6 +31,11 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
     {id:'save',l:'저장',line:'저장하고 나중에 따라해.'},
     {id:'tag',l:'태그',line:'친구 태그하고 봐.'}
   ];
+  /* WAVE108: 훅 프리셋 = 각 분류 첫문장. 렌더 0 · 점수 0 · 18자/3말투/A/B 유지 */
+  var HOOK_PRESETS=HOOK_KINDS.map(function(k){
+    var h=clip18(k.pool[0]).h;
+    return {id:k.id, l:k.l, h:h};
+  });
   function plat(){
     var id; try{id=localStorage.getItem('clip_plat')||'reels';}catch(e){id='reels';}
     return PLATS.filter(function(x){return x.id===id;})[0]||PLATS[0];
@@ -111,6 +116,11 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
       +'<div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">'+HOOK_KINDS.map(function(k){
         var on=hookKind().id===k.id;
         return '<button type="button" data-hk="'+k.id+'" style="padding:6px 12px;font-size:12px;border-radius:999px;cursor:pointer;border:1px solid '+(on?'#e0b552':'#2a2438')+';background:'+(on?'#e0b552':'#1c1826')+';color:'+(on?'#111':'#ece8f1')+'">'+k.l+'</button>';
+      }).join('')+'</div>'
+      +'<div class="sub" id="hookPresetLabel" style="margin:0 0 6px">훅 프리셋 · 탭=그 문장 · 점수 없음 · 영상렌더 없음</div>'
+      +'<div class="row" id="hookPresets" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">'+HOOK_PRESETS.map(function(p){
+        var on=hookKind().id===p.id && (last.split('\n')[0]===p.h);
+        return '<button type="button" data-hpre="'+p.id+'" style="padding:6px 10px;font-size:11px;border-radius:999px;cursor:pointer;border:1px solid '+(on?'#e0b552':'#2a2438')+';background:'+(on?'#241d15':'#1c1826')+';color:#ece8f1">'+p.l+' · '+p.h+'</button>';
       }).join('')+'</div>'
       +'<div class="sub" style="margin:0 0 6px">말투 · 릴스/숏츠/틱톡 · API 없음 · 1행 18자 유지</div>'
       +'<div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">'+PLATS.map(function(p){
@@ -230,6 +240,22 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
         var keep=(document.getElementById('out')&&document.getElementById('out').textContent)||'';
         render();
         if(keep){var o=document.getElementById('out'); if(o) o.textContent=keep;}
+      };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-hpre]'),function(b){
+      b.onclick=function(){
+        var id=b.getAttribute('data-hpre');
+        var pre=HOOK_PRESETS.filter(function(x){return x.id===id;})[0];
+        if(!pre)return;
+        try{localStorage.setItem('clip_hk',pre.id);}catch(e){}
+        var topicEl=document.getElementById('topic');
+        var topic=(topicEl&&topicEl.value)||localStorage.getItem('clip_topic')||'우리 앱';
+        var kind=HOOK_KINDS.filter(function(k){return k.id===pre.id;})[0]||HOOK_KINDS[0];
+        var body=formatHook(kind,pre.h,topic);
+        try{localStorage.setItem('lastHook',body);}catch(e){}
+        render();
+        var o=document.getElementById('out'); if(o) o.textContent=body;
+        try{legionTrack('hook_preset',{id:pre.id})}catch(e){}
       };
     });
     Array.prototype.forEach.call(document.querySelectorAll('[data-plat]'),function(b){
