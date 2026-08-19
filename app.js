@@ -36,6 +36,15 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
     var h=clip18(k.pool[0]).h;
     return {id:k.id, l:k.l, h:h};
   });
+  /* WAVE117: 프리셋 핀. 렌더 0 · 점수 0 · 18자/3말투 유지 */
+  function loadHprePins(){
+    try{
+      var a=JSON.parse(localStorage.getItem('clip_hpre_pins')||'[]');
+      if(!Array.isArray(a)) return [];
+      return a.filter(function(id){return HOOK_PRESETS.some(function(p){return p.id===id;});}).slice(0,5);
+    }catch(e){return [];}
+  }
+  function saveHprePins(a){try{localStorage.setItem('clip_hpre_pins',JSON.stringify((a||[]).slice(0,5)));}catch(e){}}
   function plat(){
     var id; try{id=localStorage.getItem('clip_plat')||'reels';}catch(e){id='reels';}
     return PLATS.filter(function(x){return x.id===id;})[0]||PLATS[0];
@@ -117,11 +126,22 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
         var on=hookKind().id===k.id;
         return '<button type="button" data-hk="'+k.id+'" style="padding:6px 12px;font-size:12px;border-radius:999px;cursor:pointer;border:1px solid '+(on?'#e0b552':'#2a2438')+';background:'+(on?'#e0b552':'#1c1826')+';color:'+(on?'#111':'#ece8f1')+'">'+k.l+'</button>';
       }).join('')+'</div>'
-      +'<div class="sub" id="hookPresetLabel" style="margin:0 0 6px">훅 프리셋 · 탭=그 문장 · 점수 없음 · 영상렌더 없음</div>'
-      +'<div class="row" id="hookPresets" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">'+HOOK_PRESETS.map(function(p){
-        var on=hookKind().id===p.id && (last.split('\n')[0]===p.h);
-        return '<button type="button" data-hpre="'+p.id+'" style="padding:6px 10px;font-size:11px;border-radius:999px;cursor:pointer;border:1px solid '+(on?'#e0b552':'#2a2438')+';background:'+(on?'#241d15':'#1c1826')+';color:#ece8f1">'+p.l+' · '+p.h+'</button>';
-      }).join('')+'</div>'
+      +'<div class="sub" id="hookPresetLabel" style="margin:0 0 6px">훅 프리셋 · 탭=그 문장 · ☆=핀 · 점수 없음 · 영상렌더 없음 · 핀 '+loadHprePins().length+'/5</div>'
+      +'<div class="row" id="hookPresets" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">'+(function(){
+        var hpins=loadHprePins();
+        var shown=HOOK_PRESETS.slice().sort(function(a,b){
+          var pa=hpins.indexOf(a.id)>=0?0:1, pb=hpins.indexOf(b.id)>=0?0:1;
+          return pa-pb;
+        });
+        return shown.map(function(p){
+          var on=hookKind().id===p.id && (last.split('\n')[0]===p.h);
+          var pinned=hpins.indexOf(p.id)>=0;
+          return '<span style="display:inline-flex;gap:2px;align-items:center">'
+            +'<button type="button" data-hpre="'+p.id+'" style="padding:6px 10px;font-size:11px;border-radius:999px;cursor:pointer;border:1px solid '+(on?'#e0b552':'#2a2438')+';background:'+(on?'#241d15':'#1c1826')+';color:#ece8f1">'+(pinned?'📌 ':'')+p.l+' · '+p.h+'</button>'
+            +'<button type="button" class="sec" data-hpin="'+p.id+'" aria-label="프리셋 핀" style="padding:6px 8px;font-size:11px">'+(pinned?'★':'☆')+'</button>'
+            +'</span>';
+        }).join('');
+      })()+'</div>'
       +'<div class="sub" style="margin:0 0 6px">말투 · 릴스/숏츠/틱톡 · API 없음 · 1행 18자 유지</div>'
       +'<div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">'+PLATS.map(function(p){
         var on=plat().id===p.id;
@@ -256,6 +276,21 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
         render();
         var o=document.getElementById('out'); if(o) o.textContent=body;
         try{legionTrack('hook_preset',{id:pre.id})}catch(e){}
+      };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-hpin]'),function(b){
+      b.onclick=function(ev){
+        if(ev) ev.stopPropagation();
+        var id=b.getAttribute('data-hpin');
+        if(!HOOK_PRESETS.some(function(p){return p.id===id;})) return;
+        var a=loadHprePins();
+        var ix=a.indexOf(id);
+        if(ix>=0) a.splice(ix,1); else { a.unshift(id); if(a.length>5) a=a.slice(0,5); }
+        saveHprePins(a);
+        var keep=(document.getElementById('out')&&document.getElementById('out').textContent)||'';
+        render();
+        if(keep){var o=document.getElementById('out'); if(o) o.textContent=keep;}
+        try{legionTrack('hook_preset_pin',{id:id,on:ix<0?1:0})}catch(e){}
       };
     });
     Array.prototype.forEach.call(document.querySelectorAll('[data-plat]'),function(b){
