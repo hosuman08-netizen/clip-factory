@@ -14,6 +14,15 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
     return HOOK_KINDS.filter(function(x){return x.id===id;})[0]||HOOK_KINDS[0];
   }
   function hookPool(){return hookKind().pool;}
+  function clip18(s){
+    s=String(s||'');
+    if(s.length<=18) return {h:s, n:s.length, rest:''};
+    return {h:s.slice(0,18), n:18, rest:s.slice(18)};
+  }
+  function formatHook(kind,h0,topic){
+    var c=clip18(h0);
+    return c.h+'\n['+kind.l+'] '+(c.rest?c.rest+' · ':'')+topic+' — 설치 없이 바로.\n링크는 고정댓글.\n'+c.n+'/18';
+  }
   var hooks=HOOK_KINDS.reduce(function(a,k){return a.concat(k.pool);},[]);
   var gens=+(localStorage.getItem('clip_gens')||0);
   var copyn=+(localStorage.getItem('clip_copy')||0);
@@ -110,7 +119,7 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
         h0=pool[Math.floor(Math.random()*pool.length)];
         tries++;
       }while(forceDiff && lastH.indexOf(h0)>=0 && tries<8);
-      var body='['+kind.l+'] '+h0+'\n\n'+topic+' — 설치 없이 바로.\n링크는 고정댓글.';
+      var body=formatHook(kind,h0,topic);
       gens++; localStorage.setItem('clip_gens',gens);
       hist.unshift(body); saveHist();
       try{localStorage.setItem('lastHook',body);}catch(e){}
@@ -131,7 +140,7 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
       var pool=kind.pool;
       for(var n=0;n<3;n++){
         var h0=pool[Math.floor(Math.random()*pool.length)];
-        var body='['+kind.l+'] '+h0+'\n\n'+topic+' — 설치 없이 바로.\n링크는 고정댓글.';
+        var body=formatHook(kind,h0,topic);
         batch.push(body); hist.unshift(body); gens++; bumpToday();
       }
       localStorage.setItem('clip_gens',gens); saveHist();
