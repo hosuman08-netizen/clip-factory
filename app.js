@@ -19,9 +19,20 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
     if(s.length<=18) return {h:s, n:s.length, rest:''};
     return {h:s.slice(0,18), n:18, rest:s.slice(18)};
   }
+  /* WAVE11: 릴스/숏츠/틱톡 말투만. API 0. 18자컷 불변 */
+  var PLATS=[
+    {id:'reels',l:'릴스',line:function(t){return t+' — 분위기 저장.';},cta:'링크는 고정댓글.'},
+    {id:'shorts',l:'숏츠',line:function(t){return t+' — 끝까지 보면 끝.';},cta:'설명란에 링크.'},
+    {id:'tt',l:'틱톡',line:function(t){return t+' — 지금 ㄱㄱ.';},cta:'고정댓글 ㄱㄱ.'}
+  ];
+  function plat(){
+    var id; try{id=localStorage.getItem('clip_plat')||'reels';}catch(e){id='reels';}
+    return PLATS.filter(function(x){return x.id===id;})[0]||PLATS[0];
+  }
   function formatHook(kind,h0,topic){
     var c=clip18(h0);
-    return c.h+'\n['+kind.l+'] '+(c.rest?c.rest+' · ':'')+topic+' — 설치 없이 바로.\n링크는 고정댓글.\n'+c.n+'/18';
+    var p=plat();
+    return c.h+'\n['+kind.l+'·'+p.l+'] '+(c.rest?c.rest+' · ':'')+p.line(topic)+'\n'+p.cta+'\n'+c.n+'/18';
   }
   var hooks=HOOK_KINDS.reduce(function(a,k){return a.concat(k.pool);},[]);
   var gens=+(localStorage.getItem('clip_gens')||0);
@@ -76,6 +87,11 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
       +'<div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">'+HOOK_KINDS.map(function(k){
         var on=hookKind().id===k.id;
         return '<button type="button" data-hk="'+k.id+'" style="padding:6px 12px;font-size:12px;border-radius:999px;cursor:pointer;border:1px solid '+(on?'#e0b552':'#2a2438')+';background:'+(on?'#e0b552':'#1c1826')+';color:'+(on?'#111':'#ece8f1')+'">'+k.l+'</button>';
+      }).join('')+'</div>'
+      +'<div class="sub" style="margin:0 0 6px">말투 · 릴스/숏츠/틱톡 · API 없음 · 1행 18자 유지</div>'
+      +'<div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">'+PLATS.map(function(p){
+        var on=plat().id===p.id;
+        return '<button type="button" data-plat="'+p.id+'" style="padding:6px 12px;font-size:12px;border-radius:999px;cursor:pointer;border:1px solid '+(on?'#e0b552':'#2a2438')+';background:'+(on?'#e0b552':'#1c1826')+';color:'+(on?'#111':'#ece8f1')+'">'+p.l+'</button>';
       }).join('')+'</div>'
       +'<input id="topic" placeholder="주제/제품" value="'+(localStorage.getItem('clip_topic')||'').replace(/"/g,'&quot;')+'"/>'
       +'<button id="go">훅 생성</button><button class="sec" id="x3">3연 훅</button><button class="sec" id="copy">복사</button>'
@@ -158,6 +174,14 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
     Array.prototype.forEach.call(document.querySelectorAll('[data-hk]'),function(b){
       b.onclick=function(){
         try{localStorage.setItem('clip_hk',b.getAttribute('data-hk'));}catch(e){}
+        var keep=(document.getElementById('out')&&document.getElementById('out').textContent)||'';
+        render();
+        if(keep){var o=document.getElementById('out'); if(o) o.textContent=keep;}
+      };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-plat]'),function(b){
+      b.onclick=function(){
+        try{localStorage.setItem('clip_plat',b.getAttribute('data-plat'));}catch(e){}
         var keep=(document.getElementById('out')&&document.getElementById('out').textContent)||'';
         render();
         if(keep){var o=document.getElementById('out'); if(o) o.textContent=keep;}
