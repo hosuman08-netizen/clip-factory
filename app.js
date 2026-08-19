@@ -34,6 +34,18 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
     var p=plat();
     return c.h+'\n['+kind.l+'·'+p.l+'] '+(c.rest?c.rest+' · ':'')+p.line(topic)+'\n'+p.cta+'\n'+c.n+'/18';
   }
+  function pickTwo(pool,lastH){
+    var a=pool[Math.floor(Math.random()*pool.length)];
+    var b=a, tries=0;
+    do{ b=pool[Math.floor(Math.random()*pool.length)]; tries++; }
+    while((b===a || (lastH && lastH.indexOf(b)>=0)) && tries<12);
+    if(b===a && pool.length>1) b=pool[(pool.indexOf(a)+1)%pool.length];
+    return [a,b];
+  }
+  function loadAb(){
+    try{ var a=JSON.parse(localStorage.getItem('clip_ab')||'[]'); return Array.isArray(a)?a:[]; }
+    catch(e){ return []; }
+  }
   var hooks=HOOK_KINDS.reduce(function(a,k){return a.concat(k.pool);},[]);
   var gens=+(localStorage.getItem('clip_gens')||0);
   var copyn=+(localStorage.getItem('clip_copy')||0);
@@ -96,6 +108,21 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
       +'<input id="topic" placeholder="주제/제품" value="'+(localStorage.getItem('clip_topic')||'').replace(/"/g,'&quot;')+'"/>'
       +'<button id="go">훅 생성</button><button class="sec" id="x3">3연 훅</button><button class="sec" id="copy">복사</button>'
       +'<button class="sec" id="again">변형 재생성</button><button class="sec" id="pin">📌 핀</button><button class="sec" id="undoClip">↩ 직전</button>'
+      +(function(){
+        var ab=loadAb();
+        if(ab.length<2) return '';
+        var pick=last||ab[0];
+        return '<div class="sub" style="margin:10px 0 6px">A/B 두 장 · 탭으로 채택 · 점수 없음 · 영상렌더 없음</div>'
+          +'<div class="row" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
+          +ab.slice(0,2).map(function(body,i){
+            var on=pick===body;
+            var line=String(body).split('\n')[0];
+            return '<button type="button" data-ab="'+i+'" style="text-align:left;padding:10px;border-radius:12px;cursor:pointer;border:1px solid '+(on?'#e0b552':'#2a2438')+';background:'+(on?'#241d15':'#1c1826')+';color:#ece8f1">'
+              +'<b style="color:#e0b552">'+(i?'B':'A')+'</b> · 채택'
+              +'<div style="margin-top:6px;font-size:12px;white-space:pre-wrap;font-weight:400">'+line.replace(/</g,'&lt;')+'</div>'
+              +'</button>';
+          }).join('')+'</div>';
+      })()
       +'<pre id="out" style="margin-top:12px;white-space:pre-wrap;font-size:13px">'+last.replace(/</g,'&lt;')+'</pre></div>'
       +(pins.length?'<div class="card"><b>핀 훅</b><div id="pins" class="sub" style="margin-top:8px"></div></div>':'')
       +'<div class="card"><b>7일 생성</b><div id="clipSpark" style="display:flex;align-items:flex-end;gap:3px;height:28px;margin-top:8px"></div></div>'+'<div class="card"><b>최근 훅</b><div id="hist" class="sub" style="margin-top:8px"></div></div>';
@@ -130,19 +157,18 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
       var lastH=localStorage.getItem('lastHook')||'';
       var kind=hookKind();
       var pool=kind.pool;
-      var h0, tries=0;
-      do{
-        h0=pool[Math.floor(Math.random()*pool.length)];
-        tries++;
-      }while(forceDiff && lastH.indexOf(h0)>=0 && tries<8);
-      var body=formatHook(kind,h0,topic);
+      var pair=pickTwo(pool, forceDiff?lastH:'');
+      var bodies=[formatHook(kind,pair[0],topic), formatHook(kind,pair[1],topic)];
       gens++; localStorage.setItem('clip_gens',gens);
-      hist.unshift(body); saveHist();
-      try{localStorage.setItem('lastHook',body);}catch(e){}
+      hist.unshift(bodies[0]); saveHist();
+      try{
+        localStorage.setItem('clip_ab', JSON.stringify(bodies));
+        localStorage.setItem('lastHook', bodies[0]);
+      }catch(e){}
       bumpToday(); bumpStreak();
-      try{legionTrack('activate',{diff:!!forceDiff})}catch(e){}
+      try{legionTrack('activate',{diff:!!forceDiff,ab:1})}catch(e){}
       render();
-      document.getElementById('out').textContent=body;
+      document.getElementById('out').textContent=bodies[0];
     }
     document.getElementById('go').onclick=function(){gen(false);};
     document.getElementById('again').onclick=function(){gen(true);};
@@ -185,6 +211,17 @@ try{if(!sessionStorage.getItem('lw_p31_clip_fac_session_counter')){sessionStorag
         var keep=(document.getElementById('out')&&document.getElementById('out').textContent)||'';
         render();
         if(keep){var o=document.getElementById('out'); if(o) o.textContent=keep;}
+      };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-ab]'),function(b){
+      b.onclick=function(){
+        var i=+b.getAttribute('data-ab');
+        var pair=loadAb();
+        var body=pair[i]||'';
+        if(!body)return;
+        try{localStorage.setItem('lastHook',body);}catch(e){}
+        render();
+        var o=document.getElementById('out'); if(o) o.textContent=body;
       };
     });
     document.getElementById('pin').onclick=function(){
